@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手办图片生成器 AI Figurine Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <h1>AI Figurine Generator</h1>
+            </div>
+            <a href="admin.html" class="admin-link">⚙️</a>
+        </header>
+
+        <div class="upload-zone" id="uploadZone">
+            <input type="file" id="imageInput" accept="image/*" hidden>
+            <div class="upload-placeholder" id="uploadPlaceholder">
+                <div class="upload-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="1.5"/>
+                        <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="1.5"/>
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <h3>Drop image here</h3>
+                <p>or <span class="upload-link">browse files</span></p>
+                <small>Supports JPG, PNG, GIF up to 10MB</small>
+            </div>
+            <div class="image-preview" id="imagePreview" style="display: none;">
+                <img id="previewImage" alt="Preview">
+                <button class="remove-btn" id="removeImage">×</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="prompt-container">
+                <label for="promptInput">Generation Prompt</label>
+                <textarea id="promptInput" placeholder="Loading default prompt..."></textarea>
+            </div>
+            
+            <button class="generate-btn" id="generateBtn" disabled>
+                <span class="btn-text">Generate</span>
+                <div class="btn-loader" style="display: none;">
+                    <div class="mini-spinner"></div>
+                </div>
+            </button>
+        </div>
+
+        <div class="result-view" id="resultView" style="display: none;">
+            <div class="result-image">
+                <img id="resultImage" alt="Generated figurine">
+            </div>
+            <div class="result-actions">
+                <button class="action-btn download-btn" id="downloadBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2"/>
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Download
+                </button>
+                <button class="action-btn regenerate-btn" id="regenerateBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <polyline points="1 4 1 10 7 10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Regenerate
+                </button>
+            </div>
+        </div>
+
+        <div class="processing-overlay" id="processingOverlay" style="display: none;">
+            <div class="processing-content">
+                <div class="processing-spinner"></div>
+                <p>Processing your image...</p>
+                <small>This may take a few moments</small>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
