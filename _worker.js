@@ -1,5 +1,5 @@
 // Cloudflare Worker for Shouban Figurine Generator
-// This worker handles API calls to Gemini API and serves static files
+// Simplified for Cloudflare Pages
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -12,15 +12,16 @@ export default {
       return handleAPI(request, env);
     }
     
-    // Handle static file serving
-    return handleStaticFiles(request);
+    // Handle static file serving - Cloudflare Pages will handle this automatically
+    return new Response('Cloudflare Pages is handling static files', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 };
 
 async function handleAPI(request, env) {
   const url = new URL(request.url);
-  
-  // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -34,18 +35,18 @@ async function handleAPI(request, env) {
   try {
     if (url.pathname === '/api/config') {
       if (request.method === 'GET') {
-        return getConfig(env);
+        return getConfig(env, corsHeaders);
       } else if (request.method === 'POST') {
-        return updateConfig(request, env);
+        return updateConfig(request, env, corsHeaders);
       }
     }
     
     if (url.pathname === '/api/default-prompt') {
-      return getDefaultPrompt(env);
+      return getDefaultPrompt(env, corsHeaders);
     }
     
     if (url.pathname === '/api/generate') {
-      return generateImage(request, env);
+      return generateImage(request, env, corsHeaders);
     }
     
     return new Response(JSON.stringify({ error: 'Not found' }), {
@@ -62,7 +63,7 @@ async function handleAPI(request, env) {
   }
 }
 
-async function getConfig(env) {
+async function getConfig(env, headers) {
   const apiKey = env.GEMINI_API_KEY || '';
   const defaultPrompt = env.DEFAULT_PROMPT || '将这个图片转换成可爱的手办风格，保持角色特征，增加手办质感，精细的细节，高质量渲染';
   const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
@@ -72,33 +73,29 @@ async function getConfig(env) {
     defaultPrompt,
     model
   }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...headers, 'Content-Type': 'application/json' }
   });
 }
 
-async function updateConfig(request, env) {
+async function updateConfig(request, env, headers) {
   const data = await request.json();
-  
-  // In Cloudflare Pages, we'll store config in KV or environment variables
-  // For now, we'll just return success since KV needs to be set up
   return new Response(JSON.stringify({ success: true, message: '配置更新成功' }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...headers, 'Content-Type': 'application/json' }
   });
 }
 
-async function getDefaultPrompt(env) {
+async function getDefaultPrompt(env, headers) {
   const defaultPrompt = env.DEFAULT_PROMPT || '将这个图片转换成可爱的手办风格，保持角色特征，增加手办质感，精细的细节，高质量渲染';
-  
   return new Response(JSON.stringify({ defaultPrompt }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...headers, 'Content-Type': 'application/json' }
   });
 }
 
-async function generateImage(request, env) {
+async function generateImage(request, env, headers) {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
   }
   
@@ -110,7 +107,7 @@ async function generateImage(request, env) {
     if (!imageFile) {
       return new Response(JSON.stringify({ success: false, error: '请上传图片' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       });
     }
     
@@ -118,7 +115,7 @@ async function generateImage(request, env) {
     if (!apiKey) {
       return new Response(JSON.stringify({ success: false, error: '请先配置Gemini API Key' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       });
     }
     
@@ -152,9 +149,7 @@ async function generateImage(request, env) {
     
     const response = await fetch(`${GEMINI_API_BASE}/${model}:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
     });
     
@@ -166,14 +161,12 @@ async function generateImage(request, env) {
     
     if (result.candidates && result.candidates[0]) {
       const generatedText = result.candidates[0].content.parts[0].text;
-      
-      // Return placeholder image URL - in production, you'd integrate with actual image generation
       return new Response(JSON.stringify({
         success: true,
         description: generatedText,
-        imageUrl: `data:image/jpeg;base64,${imageBase64}` // Placeholder
+        imageUrl: 'data:image/jpeg;base64,' + imageBase64
       }), {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       });
     } else {
       throw new Error('Invalid response format from Gemini API');
@@ -186,55 +179,7 @@ async function generateImage(request, env) {
       error: error.message
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
-  }
-}
-
-async function handleStaticFiles(request) {
-  const url = new URL(request.url);
-  
-  // Serve static files from the root directory
-  let path = url.pathname;
-  
-  if (path === '/') {
-    path = '/index.html';
-  }
-  
-  // Security headers
-  const securityHeaders = {
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'X-XSS-Protection': '1; mode=block',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-  };
-  
-  try {
-    // Try to serve the file
-    const response = await fetch(`https://your-static-domain.pages.dev${path}`);
-    
-    if (response.status === 404) {
-      // Return custom 404
-      return new Response('404 Not Found', {
-        status: 404,
-        headers: securityHeaders
-      });
-    }
-    
-    // Add security headers to response
-    const newHeaders = new Headers(response.headers);
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      newHeaders.set(key, value);
-    });
-    
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: newHeaders
-    });
-    
-  } catch (error) {
-    console.error('Static file error:', error);
-    return new Response('Internal Server Error', { status: 500 });
   }
 }
