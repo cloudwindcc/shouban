@@ -64,7 +64,7 @@ async function handleAPI(request, env) {
 async function getConfig(env, headers) {
   const apiKey = env.GEMINI_API_KEY || '';
   const defaultPrompt = env.DEFAULT_PROMPT || '将这个图片转换成可爱的手办风格，保持角色特征，增加手办质感，精细的细节，高质量渲染';
-  const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = env.GEMINI_MODEL || 'nano-banana';
   
   return new Response(JSON.stringify({
     apiKey: apiKey ? '已设置' : '未设置',
@@ -133,7 +133,7 @@ async function generateImage(request, env, headers) {
       });
     }
     
-    const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = env.GEMINI_MODEL || 'nano-banana';
     
     // Convert image to base64
     const imageBuffer = await imageFile.arrayBuffer();

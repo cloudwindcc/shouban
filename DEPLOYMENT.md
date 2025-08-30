@@ -54,7 +54,7 @@ shouban-figurine-generator/
    ```bash
    GEMINI_API_KEY=你的_gemini_api_key
    DEFAULT_PROMPT=Use the nano-banana model to create a 1/7 scale commercialized figure...
-   GEMINI_MODEL=gemini-1.5-flash
+   GEMINI_MODEL=nano-banana
    PORT=3000
    ```
 
@@ -77,7 +77,7 @@ wrangler login
 ```bash
 GEMINI_API_KEY=你的_gemini_api_key
 DEFAULT_PROMPT=Use the nano-banana model to create a 1/7 scale commercialized figure...
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=nano-banana
 ```
 
 #### 4. 部署到 Cloudflare Pages
@@ -114,7 +114,7 @@ id = "your-kv-namespace-id"
 |--------|------|------|
 | `GEMINI_API_KEY` | Google Gemini API 密钥 | `AIzaSy...` |
 | `DEFAULT_PROMPT` | 默认生成提示词 | `生成手办风格的...` |
-| `GEMINI_MODEL` | Gemini 模型名称 | `gemini-1.5-flash` |
+| `GEMINI_MODEL` | Gemini 模型名称 | `nano-banana` |
 | `ENVIRONMENT` | 环境标识 | `production` |
 
 ## 🔄 自动部署
