@@ -1,3 +1,13 @@
+window.onload = function() {
+    const splashScreen = document.getElementById('splash-screen');
+    if (splashScreen) {
+        // Add a small delay to prevent jarring transition if content loads too fast
+        setTimeout(() => {
+            splashScreen.classList.add('hidden');
+        }, 300);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const uploadZone = document.getElementById('uploadZone');
