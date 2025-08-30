@@ -12,11 +12,9 @@ export default {
       return handleAPI(request, env);
     }
     
-    // Handle static file serving - Cloudflare Pages will handle this automatically
-    return new Response('Cloudflare Pages is handling static files', {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' }
-    });
+    // For non-API routes, serve the static assets.
+    // env.ASSETS.fetch is the standard way to do this in a Pages _worker.js.
+    return env.ASSETS.fetch(request);
   }
 };
 
@@ -66,7 +64,7 @@ async function handleAPI(request, env) {
 async function getConfig(env, headers) {
   const apiKey = env.GEMINI_API_KEY || '';
   const defaultPrompt = env.DEFAULT_PROMPT || '将这个图片转换成可爱的手办风格，保持角色特征，增加手办质感，精细的细节，高质量渲染';
-  const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = env.GEMINI_MODEL || 'nano-banana';
   
   return new Response(JSON.stringify({
     apiKey: apiKey ? '已设置' : '未设置',
@@ -78,8 +76,13 @@ async function getConfig(env, headers) {
 }
 
 async function updateConfig(request, env, headers) {
-  const data = await request.json();
-  return new Response(JSON.stringify({ success: true, message: '配置更新成功' }), {
+  // In a serverless environment, config should be managed via environment variables.
+  // This endpoint is disabled to prevent confusion.
+  return new Response(JSON.stringify({
+    success: false,
+    message: '无法在线更新配置。请在 Cloudflare Pages 仪表盘中设置环境变量 (例如 GEMINI_API_KEY)。'
+  }), {
+    status: 400, // Bad Request
     headers: { ...headers, 'Content-Type': 'application/json' }
   });
 }
@@ -89,6 +92,17 @@ async function getDefaultPrompt(env, headers) {
   return new Response(JSON.stringify({ defaultPrompt }), {
     headers: { ...headers, 'Content-Type': 'application/json' }
   });
+}
+
+// Helper function to convert ArrayBuffer to Base64
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 async function generateImage(request, env, headers) {
@@ -119,12 +133,12 @@ async function generateImage(request, env, headers) {
       });
     }
     
-    const model = env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const model = env.GEMINI_MODEL || 'nano-banana';
     
     // Convert image to base64
     const imageBuffer = await imageFile.arrayBuffer();
-    const imageBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
     const mimeType = imageFile.type;
+    const imageBase64 = arrayBufferToBase64(imageBuffer);
     
     // Call Gemini API
     const requestBody = {
@@ -164,7 +178,7 @@ async function generateImage(request, env, headers) {
       return new Response(JSON.stringify({
         success: true,
         description: generatedText,
-        imageUrl: 'data:image/jpeg;base64,' + imageBase64
+        imageUrl: `data:${mimeType};base64,${imageBase64}`
       }), {
         headers: { ...headers, 'Content-Type': 'application/json' }
       });
