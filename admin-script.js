@@ -10,16 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const configStatus = document.getElementById('configStatus');
     const notification = document.getElementById('notification');
 
-    // 显示/隐藏API Key
-    toggleApiKeyBtn.addEventListener('click', function() {
-        if (apiKeyInput.type === 'password') {
-            apiKeyInput.type = 'text';
-            toggleApiKeyBtn.textContent = '隐藏';
-        } else {
-            apiKeyInput.type = 'password';
-            toggleApiKeyBtn.textContent = '显示';
-        }
-    });
+    // Adapt UI for serverless environment
+    apiKeyInput.disabled = true;
+    apiKeyInput.placeholder = '在Cloudflare环境变量中设置';
+    toggleApiKeyBtn.style.display = 'none';
+    modelSelect.disabled = true; // Model is also set by env var or defaults in worker
+
+    // 显示/隐藏API Key - No longer needed as button is hidden
+    // toggleApiKeyBtn.addEventListener('click', function() { ... });
 
     // 加载配置
     loadConfigBtn.addEventListener('click', loadConfig);
@@ -60,50 +58,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function saveConfig() {
-        try {
-            showNotification('正在保存配置...', 'info');
-            
-            const configData = {
-                model: modelSelect.value,
-                defaultPrompt: defaultPromptTextarea.value
-            };
+        // In serverless, config is read-only from the admin panel.
+        // Inform the user how to configure the application.
+        const message = '无法在线更新配置。请在 Cloudflare Pages 仪表盘中设置环境变量。';
+        showNotification(message, 'error');
 
-            // 只有在输入了新的API Key时才发送
-            if (apiKeyInput.value.trim()) {
-                configData.apiKey = apiKeyInput.value.trim();
-            }
-
-            const response = await fetch('/api/config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(configData)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            if (result.success) {
-                configStatus.textContent = '已保存';
-                configStatus.className = 'status-indicator success';
-                showNotification('配置保存成功', 'success');
-                
-                // 清空API Key输入框
-                apiKeyInput.value = '';
-                apiKeyInput.placeholder = '已设置 API Key';
-            } else {
-                throw new Error(result.error || '保存失败');
-            }
-        } catch (error) {
-            console.error('保存配置失败:', error);
-            configStatus.textContent = '保存失败';
-            configStatus.className = 'status-indicator error';
-            showNotification('保存配置失败: ' + error.message, 'error');
-        }
+        // Since the backend will now send an error, we can also handle it here
+        // but the above is more direct. For completeness, let's just replace the function body.
     }
 
     async function testApiConnection() {
